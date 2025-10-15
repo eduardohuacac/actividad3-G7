@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "23401957871",
-    "project_id": "mikhunchik-49677",
-    "storage_bucket": "mikhunchik-49677.firebasestorage.app"
+    "project_number": "1079365988559",
+    "project_id": "mikhunchikapp",
+    "storage_bucket": "mikhunchikapp.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:23401957871:android:bb0c1c05a377aa705fce1a",
+        "mobilesdk_app_id": "1:1079365988559:android:c51975f6afedb3763ac7ba",
         "android_client_info": {
           "package_name": "com.example.mikunchik"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCslchlM0qN2HfTMsEFLMC2rCQWPrvj44s"
+          "current_key": "AIzaSyAq7kfdwuU3JRv0HD-3np68Y808vFGIeCg"
         }
       ],
       "services": {

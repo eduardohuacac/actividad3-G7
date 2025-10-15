@@ -1,11 +1,11 @@
 // lib/screens/main_handler.dart
 
 import 'package:flutter/material.dart';
-import 'principal_screen.dart';
-import 'buscar_screen.dart';
-import 'publicar_screen.dart';
-import 'feed_screen.dart';
-import 'perfil/perfil_screen.dart';
+import '../screens/principal_screen.dart';
+import '../screens/buscar_screen.dart';
+import '../screens/publicar_screen.dart';
+import '../screens/feed_screen.dart';
+import '../screens/perfil/perfil_screen.dart';
 
 class MainHandler extends StatefulWidget {
   const MainHandler({super.key});
@@ -39,11 +39,26 @@ class _MainHandlerState extends State<MainHandler> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Principal'),
-          BottomNavigationBarItem(icon: Icon(Icons.search_outlined), activeIcon: Icon(Icons.search), label: 'Buscar'),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), activeIcon: Icon(Icons.add_circle), label: 'Publicar'),
-          BottomNavigationBarItem(icon: Icon(Icons.rss_feed_outlined), activeIcon: Icon(Icons.rss_feed), label: 'Feed'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Perfil'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Principal'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              activeIcon: Icon(Icons.search),
+              label: 'Buscar'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline),
+              activeIcon: Icon(Icons.add_circle),
+              label: 'Publicar'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.rss_feed_outlined),
+              activeIcon: Icon(Icons.rss_feed),
+              label: 'Feed'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Perfil'),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: const Color(0xFFF2A71A),

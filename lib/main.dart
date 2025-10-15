@@ -1,36 +1,35 @@
-// lib/main.dart
-
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
-import 'screens/main_handler.dart';
-import 'screens/perfil/personalizar_screen.dart';
+import 'handlers/main_handler.dart';
+import 'screens/perfil/personalizar_screen.dart'; // ✅ Importar la pantalla
 
-void main() {
-  runApp(const MikunchikApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const MyApp());
 }
 
-class MikunchikApp extends StatelessWidget {
-  const MikunchikApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Mikunchik',
+      title: 'MiKunchik',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.orange,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        primaryColor: const Color(0xFFF2A71A),
         scaffoldBackgroundColor: Colors.white,
       ),
-      debugShowCheckedModeBanner: false,
-      // La ruta inicial de la aplicación.
       initialRoute: '/login',
-      // Definición de las rutas nombradas para una navegación limpia.
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/main': (context) => const MainHandler(),
-        '/personalizar': (context) => const PersonalizarScreen(),
+        '/personalizar': (context) =>
+            const PersonalizarPerfilScreen(), // ✅ Añadir ruta
       },
     );
   }

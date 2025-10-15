@@ -1,108 +1,175 @@
-// lib/screens/perfil/personalizar_screen.dart
-
 import 'package:flutter/material.dart';
-  import '../../utils/image_urls.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../session_user.dart';
 
-class PersonalizarScreen extends StatefulWidget {
-  const PersonalizarScreen({super.key});
+class PersonalizarPerfilScreen extends StatefulWidget {
+  const PersonalizarPerfilScreen({super.key});
+
   @override
-  PersonalizarScreenState createState() => PersonalizarScreenState();
+  State<PersonalizarPerfilScreen> createState() =>
+      _PersonalizarPerfilScreenState();
 }
 
-class PersonalizarScreenState extends State<PersonalizarScreen> {
+class _PersonalizarPerfilScreenState extends State<PersonalizarPerfilScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  String nombre = '';
+  String ciudad = '';
+  String pais = '';
+  String descripcion = '';
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  /// Cargar datos del usuario desde Firestore
+  Future<void> _loadProfile() async {
+    if (SessionUser.nombre.isEmpty) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(SessionUser.nombre)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          nombre = data['nombre'] ?? '';
+          ciudad = data['ciudad'] ?? '';
+          pais = data['pais'] ?? '';
+          descripcion = data['descripcion'] ?? '';
+        });
+      } else {
+        // Si no hay datos, usamos SessionUser
+        setState(() {
+          nombre = SessionUser.nombre;
+          ciudad = SessionUser.ciudad;
+          pais = SessionUser.pais;
+          descripcion = SessionUser.descripcion;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar perfil: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// Guardar perfil en Firestore y actualizar SessionUser
+  Future<void> _saveProfile() async {
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Guardar o actualizar Firestore
+      await FirebaseFirestore.instance
+          .collection('usuarios')
+          .doc(SessionUser.nombre)
+          .set({
+        'nombre': nombre,
+        'ciudad': ciudad,
+        'pais': pais,
+        'descripcion': descripcion,
+        'avatarUrl': '', // Siempre icono por ahora
+        'fechaActualizacion': FieldValue.serverTimestamp(),
+      });
+
+      // Actualizar SessionUser para reflejar cambios en PerfilScreen
+      SessionUser.nombre = nombre;
+      SessionUser.ciudad = ciudad;
+      SessionUser.pais = pais;
+      SessionUser.descripcion = descripcion;
+      SessionUser.avatarUrl = '';
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil guardado correctamente')),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar perfil: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Editar Perfil"),
         backgroundColor: const Color(0xFFF2A71A),
-        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundImage: NetworkImage(AppImageUrls.personalizarAvatar),
-                ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Color(0xFFF2A71A),
-                      shape: BoxShape.circle,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: ListView(
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.orange[300],
+                        child: const Icon(
+                          Icons.person,
+                          size: 60,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                    child: IconButton(
-                      icon: Icon(Icons.edit, color: Colors.white),
-                      onPressed: () {},
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      initialValue: nombre,
+                      decoration: const InputDecoration(labelText: 'Nombre'),
+                      validator: (val) => val == null || val.isEmpty
+                          ? 'Ingresa tu nombre'
+                          : null,
+                      onSaved: (val) => nombre = val ?? '',
                     ),
-                  ),
-                )
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Editar foto de perfil",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
-            ),
-            const SizedBox(height: 32),
-            _buildInfoTextField("Nombre", "Sonia Perez"),
-            const SizedBox(height: 16),
-            _buildInfoTextField("Género", "Femenino"),
-            const SizedBox(height: 16),
-            _buildInfoTextField("País", "Perú"),
-            const SizedBox(height: 16),
-            _buildInfoTextField("Ciudad", "Cusco"),
-            const SizedBox(height: 16),
-            _buildInfoTextField(
-              "Añade una descripción",
-              "Soy Sonia Perez de Cusco y me gusta cocinar",
-              maxLines: 3,
-            ),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF2A71A),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                ),
-                child: const Text(
-                  "Guardar",
-                  style: TextStyle(fontSize: 20, color: Colors.black),
+                    TextFormField(
+                      initialValue: ciudad,
+                      decoration: const InputDecoration(labelText: 'Ciudad'),
+                      onSaved: (val) => ciudad = val ?? '',
+                    ),
+                    TextFormField(
+                      initialValue: pais,
+                      decoration: const InputDecoration(labelText: 'País'),
+                      onSaved: (val) => pais = val ?? '',
+                    ),
+                    TextFormField(
+                      initialValue: descripcion,
+                      decoration:
+                          const InputDecoration(labelText: 'Descripción'),
+                      maxLines: 3,
+                      onSaved: (val) => descripcion = val ?? '',
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: _saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF2A71A),
+                      ),
+                      child: const Text('Guardar Cambios'),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoTextField(String label, String initialValue, {int maxLines = 1}) {
-    return TextFormField(
-      initialValue: initialValue,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: Colors.grey[200],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: BorderSide.none,
-        ),
-      ),
     );
   }
 }

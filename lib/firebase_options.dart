@@ -23,20 +23,11 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -50,20 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDHanvn09kT_LdLfdZoqzcXULgbNM7BLZI',
-    appId: '1:23401957871:web:803124097e3a7f365fce1a',
-    messagingSenderId: '23401957871',
-    projectId: 'mikhunchik-49677',
-    authDomain: 'mikhunchik-49677.firebaseapp.com',
-    storageBucket: 'mikhunchik-49677.firebasestorage.app',
-    measurementId: 'G-KH6ER5E5HP',
+    apiKey: 'AIzaSyBx_CrkoxkCxf6HVWh3qIHyQxcsOxYVw8w',
+    appId: '1:1079365988559:web:f08ed30d9b6f26dc3ac7ba',
+    messagingSenderId: '1079365988559',
+    projectId: 'mikhunchikapp',
+    authDomain: 'mikhunchikapp.firebaseapp.com',
+    storageBucket: 'mikhunchikapp.firebasestorage.app',
+    measurementId: 'G-GHKDW19BXQ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCslchlM0qN2HfTMsEFLMC2rCQWPrvj44s',
-    appId: '1:23401957871:android:bb0c1c05a377aa705fce1a',
-    messagingSenderId: '23401957871',
-    projectId: 'mikhunchik-49677',
-    storageBucket: 'mikhunchik-49677.firebasestorage.app',
+    apiKey: 'AIzaSyAq7kfdwuU3JRv0HD-3np68Y808vFGIeCg',
+    appId: '1:1079365988559:android:c51975f6afedb3763ac7ba',
+    messagingSenderId: '1079365988559',
+    projectId: 'mikhunchikapp',
+    storageBucket: 'mikhunchikapp.firebasestorage.app',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDLxtKeT8MEkptTK4owicoDArpe0ykF9ZU',
+    appId: '1:1079365988559:ios:b217e44ebb5e298c3ac7ba',
+    messagingSenderId: '1079365988559',
+    projectId: 'mikhunchikapp',
+    storageBucket: 'mikhunchikapp.firebasestorage.app',
+    iosBundleId: 'com.example.mikunchik',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDLxtKeT8MEkptTK4owicoDArpe0ykF9ZU',
+    appId: '1:1079365988559:ios:b217e44ebb5e298c3ac7ba',
+    messagingSenderId: '1079365988559',
+    projectId: 'mikhunchikapp',
+    storageBucket: 'mikhunchikapp.firebasestorage.app',
+    iosBundleId: 'com.example.mikunchik',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBx_CrkoxkCxf6HVWh3qIHyQxcsOxYVw8w',
+    appId: '1:1079365988559:web:75e1614dcb8512343ac7ba',
+    messagingSenderId: '1079365988559',
+    projectId: 'mikhunchikapp',
+    authDomain: 'mikhunchikapp.firebaseapp.com',
+    storageBucket: 'mikhunchikapp.firebasestorage.app',
+    measurementId: 'G-F1GEY2TTS8',
+  );
+
 }

@@ -1,15 +1,53 @@
 // lib/screens/principal_screen.dart
 
 import 'package:flutter/material.dart';
-import '../utils/image_urls.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PrincipalScreen extends StatefulWidget {
   const PrincipalScreen({super.key});
+
   @override
   PrincipalScreenState createState() => PrincipalScreenState();
 }
 
 class PrincipalScreenState extends State<PrincipalScreen> {
+  List<Map<String, dynamic>> topRecipes = [];
+  List<Map<String, dynamic>> feedRecipes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadTopRecipes();
+    loadFeedRecipes();
+  }
+
+  // Cargar las 5 recetas con mayor puntuación
+  void loadTopRecipes() async {
+    final query = await FirebaseFirestore.instance
+        .collection('recetas')
+        .orderBy('puntuacion', descending: true)
+        .limit(5)
+        .get();
+
+    setState(() {
+      topRecipes =
+          query.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    });
+  }
+
+  // Cargar todas las recetas para el feed
+  void loadFeedRecipes() async {
+    final query = await FirebaseFirestore.instance
+        .collection('recetas')
+        .orderBy('fecha', descending: true)
+        .get();
+
+    setState(() {
+      feedRecipes =
+          query.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,13 +55,13 @@ class PrincipalScreenState extends State<PrincipalScreen> {
         automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFFF2A71A),
         title: Row(
-          children: [
-            const CircleAvatar(
-              // Placeholder for user image
-              backgroundImage: NetworkImage(AppImageUrls.perfilAvatar),
+          children: const [
+            CircleAvatar(
+              child: Icon(Icons.person, color: Colors.white),
+              backgroundColor: Colors.orange,
             ),
-            const SizedBox(width: 10),
-            const Text(
+            SizedBox(width: 10),
+            Text(
               "Sonia Perez",
               style: TextStyle(color: Colors.black, fontSize: 16),
             ),
@@ -65,7 +103,6 @@ class PrincipalScreenState extends State<PrincipalScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              // Grid de Categorías
               GridView.count(
                 crossAxisCount: 4,
                 shrinkWrap: true,
@@ -73,14 +110,14 @@ class PrincipalScreenState extends State<PrincipalScreen> {
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
                 children: [
-                  _buildCategoryItem("Desayuno", AppImageUrls.desayunoIcon),
-                  _buildCategoryItem("Snack", AppImageUrls.snackIcon),
-                  _buildCategoryItem("Almuerzo", AppImageUrls.almuerzoIcon),
-                  _buildCategoryItem("Cena", AppImageUrls.cenaIcon),
-                  _buildCategoryItem("Refrigerios", AppImageUrls.refrigeriosIcon),
-                  _buildCategoryItem("Postres", AppImageUrls.postresIcon),
-                  _buildCategoryItem("Bebidas", AppImageUrls.bebidasIcon),
-                  _buildCategoryItem("Ver más...", AppImageUrls.verMasIcon),
+                  _buildCategoryItem("Desayuno", Icons.breakfast_dining),
+                  _buildCategoryItem("Snack", Icons.fastfood),
+                  _buildCategoryItem("Almuerzo", Icons.lunch_dining),
+                  _buildCategoryItem("Cena", Icons.dinner_dining),
+                  _buildCategoryItem("Refrigerios", Icons.icecream),
+                  _buildCategoryItem("Postres", Icons.cake),
+                  _buildCategoryItem("Bebidas", Icons.local_cafe),
+                  _buildCategoryItem("Ver más...", Icons.more_horiz),
                 ],
               ),
               const SizedBox(height: 24),
@@ -93,20 +130,46 @@ class PrincipalScreenState extends State<PrincipalScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Tarjetas de Tendencia
               SizedBox(
                 height: 250,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    _buildTrendingCard(
-                      "Arroz Chaufa", "Receta de Susana", "4.5", AppImageUrls.arrozChaufa),
-                    const SizedBox(width: 16),
-                    _buildTrendingCard(
-                      "Palta con Re", "Receta de José", "4.8", AppImageUrls.paltaRellena),
-                  ],
+                child: topRecipes.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: topRecipes.length,
+                        itemBuilder: (context, index) {
+                          final recipe = topRecipes[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 16),
+                            child: _buildTopRecipeCard(recipe),
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                "Feed de recetas",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 16),
+              feedRecipes.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: feedRecipes.length,
+                      itemBuilder: (context, index) {
+                        final recipe = feedRecipes[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: _buildFeedCard(recipe),
+                        );
+                      },
+                    ),
             ],
           ),
         ),
@@ -114,7 +177,7 @@ class PrincipalScreenState extends State<PrincipalScreen> {
     );
   }
 
-  Widget _buildCategoryItem(String title, String imageUrl) {
+  Widget _buildCategoryItem(String title, IconData icon) {
     return InkWell(
       onTap: () {},
       child: Container(
@@ -125,7 +188,7 @@ class PrincipalScreenState extends State<PrincipalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.network(imageUrl, height: 40),
+            Icon(icon, size: 40, color: Colors.orange),
             const SizedBox(height: 8),
             Text(
               title,
@@ -138,63 +201,109 @@ class PrincipalScreenState extends State<PrincipalScreen> {
     );
   }
 
-  Widget _buildTrendingCard(String title, String author, String rating, String imageUrl) {
+  Widget _buildTopRecipeCard(Map<String, dynamic> recipe) {
     return Container(
       width: 200,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(25),
         image: DecorationImage(
-          image: NetworkImage(imageUrl),
+          image: NetworkImage(recipe['imagenUrl'] ??
+              'https://cdn-icons-png.flaticon.com/512/1046/1046784.png'),
           fit: BoxFit.cover,
         ),
       ),
+      child: Container(
+        alignment: Alignment.bottomLeft,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(25),
+          gradient: LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.center,
+            colors: [
+              Colors.black.withOpacity(0.7),
+              Colors.transparent,
+            ],
+          ),
+        ),
+        child: Text(
+          recipe['nombre'],
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedCard(Map<String, dynamic> recipe) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      elevation: 4,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(25),
-                bottomRight: Radius.circular(25),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                const CircleAvatar(child: Icon(Icons.person)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(recipe['usuario'] ?? 'Anónimo',
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(recipe['nombre'] ?? 'Plato',
+                          style: const TextStyle(fontSize: 16)),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
+                Text(recipe['numeroPlatos'] ?? '',
+                    style: TextStyle(color: Colors.grey[600])),
+              ],
+            ),
+          ),
+          // Image
+          Image.network(
+            recipe['imagenUrl'] ??
+                'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
+            height: 200,
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+          // Description
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Text(
+              recipe['procedimiento'] ?? '',
+              style: TextStyle(color: Colors.grey[800]),
+            ),
+          ),
+          // Actions
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      author,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                    ),
-                    Row(
-                      children: [
-                        Image.network(AppImageUrls.starIcon, width: 15, height: 15),
-                        const SizedBox(width: 4),
-                        Text(
-                          rating,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
+                    const Icon(Icons.favorite_border),
+                    const SizedBox(width: 4),
+                    Text((recipe['votos'] ?? 0).toString()),
+                    const SizedBox(width: 16),
+                    const Icon(Icons.star_border),
+                    const SizedBox(width: 4),
+                    Text((recipe['puntuacion'] ?? 0).toString()),
                   ],
                 ),
+                const Icon(Icons.bookmark_border),
               ],
             ),
           )
