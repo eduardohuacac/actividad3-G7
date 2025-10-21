@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'handlers/main_handler.dart';
-import 'screens/perfil/personalizar_screen.dart'; // ✅ Importar la pantalla
+import 'screens/perfil/personalizar_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
