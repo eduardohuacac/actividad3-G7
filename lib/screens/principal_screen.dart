@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http; // 🔥 NUEVO
+import 'dart:convert'; // 🔥 NUEVO
 
 class PrincipalScreen extends StatefulWidget {
   const PrincipalScreen({super.key});
@@ -13,12 +15,43 @@ class PrincipalScreen extends StatefulWidget {
 class PrincipalScreenState extends State<PrincipalScreen> {
   List<Map<String, dynamic>> topRecipes = [];
   List<Map<String, dynamic>> feedRecipes = [];
+  Map<String, dynamic>? _recipeSuggestion; // 🔥 NUEVO: Sugerencia de la API
+  bool _loadingSuggestion = false; // 🔥 NUEVO
 
   @override
   void initState() {
     super.initState();
     loadTopRecipes();
     loadFeedRecipes();
+    _loadRecipeSuggestion(); // 🔥 NUEVO: Cargar sugerencia al iniciar
+  }
+
+  // 🔥 NUEVO: Método para obtener receta sugerida
+  Future<void> _loadRecipeSuggestion() async {
+    setState(() => _loadingSuggestion = true);
+
+    try {
+      final response = await http
+          .get(Uri.parse('https://www.themealdb.com/api/json/v1/1/random.php'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['meals'] != null && data['meals'].isNotEmpty) {
+          setState(() {
+            _recipeSuggestion = data['meals'][0];
+          });
+        }
+      }
+    } catch (e) {
+      print('Error cargando sugerencia: $e');
+    } finally {
+      setState(() => _loadingSuggestion = false);
+    }
+  }
+
+  // 🔥 NUEVO: Método para recargar sugerencia
+  Future<void> _refreshSuggestion() async {
+    await _loadRecipeSuggestion();
   }
 
   // Cargar las 5 recetas con mayor puntuación
@@ -93,7 +126,8 @@ class PrincipalScreenState extends State<PrincipalScreen> {
               TextField(
                 decoration: InputDecoration(
                   hintText: "Busca tu receta aquí",
-                  prefixIcon: const Icon(Icons.search),
+                  prefixIcon:
+                      const Icon(Icons.search, color: Colors.black), // 🔥 NEGRO
                   filled: true,
                   fillColor: Colors.grey[200],
                   border: OutlineInputBorder(
@@ -121,6 +155,63 @@ class PrincipalScreenState extends State<PrincipalScreen> {
                 ],
               ),
               const SizedBox(height: 24),
+
+              // 🔥 NUEVO: Sección de Sugerencia del Día
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.orange[100]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "🍳 Sugerencia del Día",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.deepOrange,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed:
+                              _loadingSuggestion ? null : _refreshSuggestion,
+                          icon: _loadingSuggestion
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.refresh,
+                                  color: Colors.deepOrange),
+                          tooltip: 'Otra sugerencia',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    if (_loadingSuggestion)
+                      const Center(
+                        child: CircularProgressIndicator(),
+                      )
+                    else if (_recipeSuggestion != null)
+                      _buildSuggestionCard()
+                    else
+                      const Text(
+                        'No hay sugerencias disponibles',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
               const Text(
                 "En tendencia",
                 style: TextStyle(
@@ -177,6 +268,75 @@ class PrincipalScreenState extends State<PrincipalScreen> {
     );
   }
 
+  // 🔥 NUEVO: Widget para mostrar la sugerencia
+  Widget _buildSuggestionCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            // Imagen de la receta
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                _recipeSuggestion!['strMealThumb'] ??
+                    'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
+                width: 60,
+                height: 60,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.fastfood, color: Colors.grey),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Información de la receta
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _recipeSuggestion!['strMeal'] ?? 'Receta sin nombre',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  if (_recipeSuggestion!['strCategory'] != null)
+                    Text(
+                      'Categoría: ${_recipeSuggestion!['strCategory']}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  if (_recipeSuggestion!['strArea'] != null)
+                    Text(
+                      'Origen: ${_recipeSuggestion!['strArea']}',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryItem(String title, IconData icon) {
     return InkWell(
       onTap: () {},
@@ -188,7 +348,7 @@ class PrincipalScreenState extends State<PrincipalScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.orange),
+            Icon(icon, size: 40, color: Colors.black), // 🔥 CAMBIADO A NEGRO
             const SizedBox(height: 8),
             Text(
               title,
@@ -294,16 +454,19 @@ class PrincipalScreenState extends State<PrincipalScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.favorite_border),
+                    const Icon(Icons.favorite_border,
+                        color: Colors.black), // 🔥 NEGRO
                     const SizedBox(width: 4),
                     Text((recipe['votos'] ?? 0).toString()),
                     const SizedBox(width: 16),
-                    const Icon(Icons.star_border),
+                    const Icon(Icons.star_border,
+                        color: Colors.black), // 🔥 NEGRO
                     const SizedBox(width: 4),
                     Text((recipe['puntuacion'] ?? 0).toString()),
                   ],
                 ),
-                const Icon(Icons.bookmark_border),
+                const Icon(Icons.bookmark_border,
+                    color: Colors.black), // 🔥 NEGRO
               ],
             ),
           )

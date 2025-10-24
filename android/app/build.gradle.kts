@@ -23,21 +23,42 @@ android {
     }
 
     defaultConfig {
-    	applicationId = "com.example.mikunchik"
-    	// Sobrescribe el valor predeterminado de Flutter
-    	minSdk = 23
-    	targetSdk = flutter.targetSdkVersion
-    	versionCode = flutter.versionCode
-    	versionName = flutter.versionName
-	}
-
-
+        applicationId = "com.example.mikunchik"
+        // Sobrescribe el valor predeterminado de Flutter
+        minSdk = 23
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
+    }
 
     buildTypes {
-        release {
+        getByName("release") {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            
+            // 🔥 CORREGIDO: Optimizaciones con sintaxis Kotlin
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            
+            // 🔥 CORREGIDO: Reducir tamaño excluyendo arquitecturas no necesarias
+            ndk {
+                abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86_64"))
+            }
+        }
+        
+        getByName("debug") {
+            // 🔥 CORREGIDO: Para debug
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+    }
+    
+
+    packaging {
+        resources {
+            excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
         }
     }
 }

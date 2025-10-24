@@ -73,78 +73,55 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // 🔥 CON DEBUGGING: Login con Google
+  // Login con Google limpio
   Future<void> _loginWithGoogle() async {
     try {
       setState(() => _loading = true);
-      print('🚀 Paso 1: Iniciando Google Sign-In...');
 
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      print(
-          '✅ Paso 1 completado: Usuario ${googleUser != null ? "seleccionado" : "cancelado"}');
 
       if (googleUser == null) {
         _showSnack('Inicio de sesión cancelado');
         return;
       }
 
-      print('🔑 Paso 2: Obteniendo autenticación...');
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      print(
-          '✅ Paso 2 completado: Token ${googleAuth.idToken != null ? "válido" : "inválido"}');
 
-      print('🔥 Paso 3: Creando credencial Firebase...');
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      print('📡 Paso 4: Iniciando sesión en Firebase Auth...');
       final UserCredential userCredential =
           await _auth.signInWithCredential(credential);
-      print(
-          '✅ Paso 4 completado: Firebase Auth ${userCredential.user != null ? "éxito" : "falló"}');
 
       if (userCredential.user != null) {
-        print('👤 Usuario Firebase: ${userCredential.user!.displayName}');
-        print('📧 Email: ${userCredential.user!.email}');
-        print('🆔 UID: ${userCredential.user!.uid}');
-
-        print('💾 Paso 5: Guardando en Firestore...');
         await _handleFirestoreUser(userCredential.user!);
-
         _showSnack('¡Bienvenido, ${userCredential.user!.displayName}!');
         _navigateToMain();
       } else {
         _showSnack('Error: No se pudo obtener información del usuario');
       }
     } on FirebaseAuthException catch (e) {
-      print('❌ ERROR Firebase Auth: ${e.code} - ${e.message}');
       _handleAuthError(e);
     } on PlatformException catch (e) {
-      print('❌ ERROR Plataforma: ${e.code} - ${e.message}');
       _showSnack('Error del dispositivo: ${e.message}');
-    } catch (e, stacktrace) {
-      print('❌ ERROR Inesperado: $e');
-      print('📋 Stacktrace: $stacktrace');
+    } catch (e) {
       _showSnack('Algo salió mal. Intenta de nuevo.');
     } finally {
       setState(() => _loading = false);
     }
   }
 
-  // 🔥 CON DEBUGGING: Manejo de usuarios en Firestore
+  // Manejo de usuarios en Firestore limpio
   Future<void> _handleFirestoreUser(User user) async {
     try {
       final usersRef = FirebaseFirestore.instance.collection('usuarios');
-
-      print('🔍 Buscando usuario en Firestore con UID: ${user.uid}');
       final userQuery =
           await usersRef.where('uid', isEqualTo: user.uid).limit(1).get();
 
       if (userQuery.docs.isEmpty) {
-        print('➕ Creando nuevo usuario en Firestore...');
         final newUser = {
           'uid': user.uid,
           'email': user.email,
@@ -156,27 +133,19 @@ class LoginScreenState extends State<LoginScreen> {
         };
 
         await usersRef.add(newUser);
-        print('✅ Nuevo usuario creado: ${user.email}');
-        _showSnack('¡Bienvenido a MiKunchik!');
       } else {
-        print('🔄 Actualizando usuario existente...');
         await usersRef.doc(userQuery.docs.first.id).update({
           'ultimo_login': FieldValue.serverTimestamp(),
           'foto': user.photoURL ?? userQuery.docs.first.data()['foto'],
         });
-        print('✅ Usuario actualizado: ${user.email}');
-        _showSnack('Bienvenido de vuelta, ${user.displayName}!');
       }
     } catch (e) {
-      print('❌ ERROR Firestore: $e');
-      // No mostrar error al usuario para no interrumpir el login
+      // Error silencioso para no interrumpir el login
     }
   }
 
-  // 🔥 MEJORADO: Manejo específico de errores
+  // Manejo de errores limpio
   void _handleAuthError(FirebaseAuthException e) {
-    print('🛠️ Manejando error: ${e.code}');
-
     switch (e.code) {
       case 'account-exists-with-different-credential':
         _showSnack('Ya existe una cuenta con este email. Usa otro método.');
@@ -205,7 +174,6 @@ class LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateToMain() {
-    print('🎯 Navegando a MainHandler...');
     Navigator.pushReplacementNamed(context, '/main');
   }
 
@@ -232,7 +200,20 @@ class LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 80),
-              Image.network(AppImageUrls.logo, height: 123),
+              // 🔥 CORREGIDO: Logo local con ruta consistente
+              Image.asset(
+                'lib/assets/images/logo.png', // Ruta de tu logo local
+                height: 123,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 123,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant_menu,
+                        size: 60, color: Colors.grey),
+                  );
+                },
+              ),
               const SizedBox(height: 30),
               const Text(
                 "INICIAR SESIÓN",
@@ -307,10 +288,20 @@ class LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    child: Image.network(
-                      AppImageUrls.googleIcon,
+                    child: // 🔥 CORREGIDO: Imagen local de Google con ruta consistente
+                        Image.asset(
+                      'lib/assets/images/google_icon.png', // Ruta de tu icono de Google
                       width: 33,
                       height: 33,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 33,
+                          height: 33,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.login, color: Colors.grey),
+                        );
+                      },
                     ),
                   ),
                 ),
